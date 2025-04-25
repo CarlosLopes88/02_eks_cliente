@@ -8,11 +8,16 @@ provider "aws" {
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-
+  ## aws eks get-token --cluster-name eks-cliente --region us-east-1 --output json teste manual
   exec {
-    api_version = "client.authentication.k8s.io/v1beta1"
+    api_version = "client.authentication.k8s.io/v1" # ou v1beta1 se preferir
     command     = "aws"
-    args        = ["eks", "get-token", "--cluster-name", "eks-cliente"]
+    args        = [
+      "eks", "get-token",
+      "--cluster-name", "eks-cliente",
+      "--region", "us-east-1",
+      "--output", "json"
+    ]
   }
 }
 
@@ -295,12 +300,12 @@ resource "kubernetes_deployment" "microservice_cliente" {
           
           env {
             name  = "DOCDB_DBNAME"
-            value =  var.db_port
+            value =  var.db_name
           }
 
           env {
-            name  = "DOCDB_PORT"
-            value =  var.db_name
+            name  = "DOCDB_DBPORT"
+            value =  var.db_port
           }
         }
 
@@ -357,6 +362,6 @@ variable "db_port" {
 }
 
 output "microservice_cliente_loadbalancer_endpoint" {
-  description = "Endpoint do LoadBalancer serviço microservice-cliente"
+  description = "Endpoint do LoadBalancer serviço de microservice-cliente"
   value       = kubernetes_service.microservice_cliente.status[0].load_balancer[0].ingress[0].hostname
 }
